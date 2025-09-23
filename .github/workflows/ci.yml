@@ -22,15 +22,47 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
       
-      - name: Set up Python
+      # --- Steps for customer_service ---
+      - name: Set up Python for customer_service
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+      - name: Install dependencies for customer_service
+        run: pip install -r requirements.txt
+        working-directory: ./backend/customer_service
+
+      - name: Run tests for customer_service
+        run: python -m pytest
+        working-directory: ./backend/customer_service
+
+      # --- Steps for product_service ---
+      - name: Set up Python for product_service
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies for product_service
+        run: pip install -r requirements.txt
+        working-directory: ./backend/product_service
+
+      - name: Run tests for product_service
+        run: python -m pytest
+        working-directory: ./backend/product_service
+
+      # --- Steps for order_service ---
+      - name: Set up Python for order_service
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies for order_service
+        run: pip install -r requirements.txt
+        working-directory: ./backend/order_service
+
+      - name: Run tests for order_service
+        run: python -m pytest
+        working-directory: ./backend/order_service
 
       - name: Build and test the app
         run: |
