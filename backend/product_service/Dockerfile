@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Run tests
-RUN pytest
+RUN python -m pytest
 
 COPY app /code/app
 
