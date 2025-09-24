@@ -116,20 +116,18 @@ jobs:
       - name: Deploy Backend Infrastructure to Staging (Namespace, ConfigMaps, Secrets, Databases)
         run: |
           echo "Deploying backend infrastructure..."
-          cd k8s/
-          kubectl apply -f configmaps.yaml
-          kubectl apply -f secrets.yaml
-          kubectl apply -f customer-db.yaml
-          kubectl apply -f product-db.yaml
-          kubectl apply -f order-db.yaml
+          kubectl apply -f k8s/configmaps.yaml
+          kubectl apply -f k8s/secrets.yaml
+          kubectl apply -f k8s/customer-db.yaml
+          kubectl apply -f k8s/product-db.yaml
+          kubectl apply -f k8s/order-db.yaml
 
       - name: Deploy Backend Microservices (Product, Order)
         run: |
           echo "Deploying backend microservices..."
-          cd k8s/
-          kubectl apply -f customer-service.yaml
-          kubectl apply -f product-service.yaml
-          kubectl apply -f order-service.yaml
+          kubectl apply -f k8s/customer-service.yaml
+          kubectl apply -f k8s/product-service.yaml
+          kubectl apply -f k8s/order-service.yaml
 
       - name: Destroy staging environment
         if: always()
