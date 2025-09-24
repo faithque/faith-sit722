@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - testing
+      - main
 
 jobs:
   ci-build:
@@ -141,4 +142,4 @@ jobs:
         if: always()
         run: |
           # This step will always run to ensure cleanup.
-          # az group delete --name ${{ secrets.STAGING_RESOURCE_GROUP }} --yes --no-wait
+          az group delete --name ${{ secrets.STAGING_RESOURCE_GROUP }} --yes --no-wait
