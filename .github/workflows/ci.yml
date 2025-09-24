@@ -1,0 +1,136 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - testing
+
+jobs:
+  ci-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: testing # This line specifies the branch to checkout
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.5.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+      
+      - name: Start database service with docker-compose
+        run: docker-compose up -d customer_db product_db order_db # Start only the database services
+        working-directory: ./
+      
+      # --- Steps for customer_service ---
+      - name: Set up Python for customer_service
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies for customer_service
+        run: pip install -r requirements.txt
+        working-directory: ./backend/customer_service
+
+      - name: Run tests for customer_service
+        run: python -m pytest
+        working-directory: ./backend/customer_service
+
+      # --- Steps for product_service ---
+      - name: Set up Python for product_service
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies for product_service
+        run: pip install -r requirements.txt
+        working-directory: ./backend/product_service
+
+      - name: Run tests for product_service
+        run: python -m pytest
+        working-directory: ./backend/product_service
+
+      # --- Steps for order_service ---
+      - name: Set up Python for order_service
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies for order_service
+        run: pip install -r requirements.txt
+        working-directory: ./backend/order_service
+
+      - name: Run tests for order_service
+        run: python -m pytest
+        working-directory: ./backend/order_service
+
+      - name: Cleanup database containers
+        if: always()
+        run: docker-compose down
+        working-directory: ./
+
+      - name: Build and test the app
+        run: |
+          docker-compose build --pull
+
+      - name: Log in to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR }}
+          username: ${{ secrets.AZURE_ACR_USERNAME }}
+          password: ${{ secrets.AZURE_ACR_PASSWORD }}
+          
+      - name: Tag and push images to ACR
+        if: success()
+        run: |
+          docker tag week10_customer_service:latest ${{ secrets.ACR }}/customer_service:latest
+          docker tag week10_product_service:latest ${{ secrets.ACR }}/product_service:latest
+          docker tag week10_order_service:latest ${{ secrets.ACR }}/order_service:latest
+          docker tag week10_frontend:latest ${{ secrets.ACR }}/frontend:latest
+
+          docker push ${{ secrets.ACR }}/customer_service:latest
+          docker push ${{ secrets.ACR }}/product_service:latest
+          docker push ${{ secrets.ACR }}/order_service:latest
+          docker push ${{ secrets.ACR }}/frontend:latest
+  
+  cd-staging:
+    needs: ci-build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials --resource-group ${{ secrets.STAGING_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --admin
+      
+      - name: Deploy Backend Infrastructure to Staging (Namespace, ConfigMaps, Secrets, Databases)
+        run: |
+          echo "Deploying backend infrastructure..."
+          kubectl apply -f k8s/configmaps.yaml
+          kubectl apply -f k8s/secrets.yaml
+          kubectl apply -f k8s/customer-db.yaml
+          kubectl apply -f k8s/product-db.yaml
+          kubectl apply -f k8s/order-db.yaml
+
+      - name: Deploy Backend Microservices (Product, Order)
+        run: |
+          echo "Deploying backend microservices..."
+          kubectl apply -f k8s/customer-service.yaml
+          kubectl apply -f k8s/product-service.yaml
+          kubectl apply -f k8s/order-service.yaml
+
+      - name: Destroy staging environment
+        if: always()
+        run: |
+          # This step will always run to ensure cleanup.
+          # az group delete --name ${{ secrets.STAGING_RESOURCE_GROUP }} --yes --no-wait
