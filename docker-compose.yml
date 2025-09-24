@@ -68,7 +68,7 @@ services:
     image: week10_customer_service:latest
     restart: always
     ports:
-      - "8000:8000"
+      - "8002:8000"
     environment:
       POSTGRES_HOST: customer_db # Connects to the 'customer_db' service within Docker network
     depends_on:
@@ -87,7 +87,7 @@ services:
     image: week10_product_service:latest
     restart: always
     ports:
-      - "8000:8000"
+      - "8003:8000"
     environment:
       POSTGRES_HOST: product_db # Connects to the 'product_db' service within Docker network
     depends_on:
