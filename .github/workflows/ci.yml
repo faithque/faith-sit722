@@ -106,30 +106,30 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Log in to Azure ACR
-        uses: azure/docker-login@v1
-        with:
-          login-server: ${{ secrets.ACR }}
-          username: ${{ secrets.AZURE_ACR_USERNAME }}
-          password: ${{ secrets.AZURE_ACR_PASSWORD }}
-          
-      - name: Create staging environment
+      - name: Get AKS credentials
         run: |
-          # Use secrets for resource group and other dynamic values
-          az group create --name ${{ secrets.STAGING_RESOURCE_GROUP }} --location ${{ secrets.AZURE_REGION }}
-          az appservice plan create --name ${{ secrets.STAGING_PLAN }} --resource-group ${{ secrets.STAGING_RESOURCE_GROUP }} --sku B1
-          az webapp create --name ${{ secrets.STAGING_APP }} --resource-group ${{ secrets.STAGING_RESOURCE_GROUP }} --plan ${{ secrets.STAGING_PLAN }}
+          az aks get-credentials --resource-group ${{ secrets.STAGING_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --admin
+      
+      - name: Deploy Backend Infrastructure to Staging (Namespace, ConfigMaps, Secrets, Databases)
+        run: |
+          echo "Deploying backend infrastructure..."
+          cd k8s/
+          kubectl apply -f configmaps.yaml
+          kubectl apply -f secrets.yaml
+          kubectl apply -f customer-db.yaml
+          kubectl apply -f product-db.yaml
+          kubectl apply -f order-db.yaml
 
-      - name: Deploy image to staging
+      - name: Deploy Backend Microservices (Product, Order)
         run: |
-          az webapp config container set --name ${{ secrets.STAGING_APP }} --resource-group ${{ secrets.STAGING_RESOURCE_GROUP }} \
-            --docker-custom-image-name ${{ secrets.ACR }}/faith-sit722:latest \
-            --container-registry-url https://${{ secrets.ACR }} \
-            --container-registry-user ${{ secrets.AZURE_ACR_USERNAME }} \
-            --container-registry-password ${{ secrets.AZURE_ACR_PASSWORD }}
+          echo "Deploying backend microservices..."
+          cd k8s/
+          kubectl apply -f customer-service.yaml
+          kubectl apply -f product-service.yaml
+          kubectl apply -f order-service.yaml
 
       - name: Destroy staging environment
         if: always()
         run: |
           # This step will always run to ensure cleanup.
-          az group delete --name ${{ secrets.STAGING_RESOURCE_GROUP }} --yes --no-wait
+          # az group delete --name ${{ secrets.STAGING_RESOURCE_GROUP }} --yes --no-wait
