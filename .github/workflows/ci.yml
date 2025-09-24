@@ -123,10 +123,10 @@ jobs:
       - name: Deploy image to staging
         run: |
           az webapp config container set --name ${{ secrets.STAGING_APP }} --resource-group ${{ secrets.STAGING_RESOURCE_GROUP }} \
-            --container-image-name ${{ secrets.ACR }}/frontend:latest \
-            --docker-registry-server-url https://${{ secrets.ACR }} \
-            --docker-registry-server-user ${{ secrets.AZURE_ACR_USERNAME }} \
-            --docker-registry-server-password ${{ secrets.AZURE_ACR_PASSWORD }}
+            --docker-custom-image-name ${{ secrets.ACR }}/faith-sit722:latest \
+            --container-registry-url https://${{ secrets.ACR }} \
+            --container-registry-user ${{ secrets.AZURE_ACR_USERNAME }} \
+            --container-registry-password ${{ secrets.AZURE_ACR_PASSWORD }}
 
       - name: Destroy staging environment
         if: always()
