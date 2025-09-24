@@ -22,6 +22,10 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
       
+      - name: Start database service with docker-compose
+        run: docker-compose up -d customer_db product_db order_db # Start only the database services
+        working-directory: ./
+      
       # --- Steps for customer_service ---
       - name: Set up Python for customer_service
         uses: actions/setup-python@v4
@@ -63,6 +67,11 @@ jobs:
       - name: Run tests for order_service
         run: python -m pytest
         working-directory: ./backend/order_service
+
+      - name: Cleanup database containers
+        if: always()
+        run: docker-compose down
+        working-directory: ./
 
       - name: Build and test the app
         run: |
