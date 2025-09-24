@@ -104,6 +104,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: testing # This line specifies the branch to checkout
+          
       - name: Log in to Azure
         uses: azure/login@v1
         with:
@@ -113,6 +118,9 @@ jobs:
         run: |
           az aks get-credentials --resource-group ${{ secrets.STAGING_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --admin
       
+      - name: List files for debugging
+        run: ls -R
+
       - name: Deploy Backend Infrastructure to Staging (Namespace, ConfigMaps, Secrets, Databases)
         run: |
           echo "Deploying backend infrastructure..."
