@@ -92,6 +92,7 @@ jobs:
           docker tag week10_order_service:latest ${{ secrets.ACR }}/order_service:latest
           docker tag week10_frontend:latest ${{ secrets.ACR }}/frontend:latest
 
+          docker push ${{ secrets.ACR }}/customer_service:latest
           docker push ${{ secrets.ACR }}/product_service:latest
           docker push ${{ secrets.ACR }}/order_service:latest
           docker push ${{ secrets.ACR }}/frontend:latest
