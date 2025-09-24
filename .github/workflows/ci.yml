@@ -124,9 +124,9 @@ jobs:
         run: |
           az webapp config container set --name ${{ secrets.STAGING_APP }} --resource-group ${{ secrets.STAGING_RESOURCE_GROUP }} \
             --container-image-name ${{ secrets.ACR }}/frontend:latest \
-            --docker-registry-url https://${{ secrets.ACR }} \
-            --docker-registry-user ${{ secrets.AZURE_ACR_USERNAME }} \
-            --docker-registry-password ${{ secrets.AZURE_ACR_PASSWORD }}
+            --docker-registry-server-url https://${{ secrets.ACR }} \
+            --docker-registry-server-user ${{ secrets.AZURE_ACR_USERNAME }} \
+            --docker-registry-server-password ${{ secrets.AZURE_ACR_PASSWORD }}
 
       - name: Destroy staging environment
         if: always()
