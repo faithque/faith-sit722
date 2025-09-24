@@ -123,7 +123,7 @@ jobs:
       - name: Deploy image to staging
         run: |
           az webapp config container set --name ${{ secrets.STAGING_APP }} --resource-group ${{ secrets.STAGING_RESOURCE_GROUP }} \
-            --docker-image-name ${{ secrets.ACR }}/frontend:latest \
+            --container-image-name ${{ secrets.ACR }}/frontend:latest \
             --docker-registry-url https://${{ secrets.ACR }} \
             --docker-registry-user ${{ secrets.AZURE_ACR_USERNAME }} \
             --docker-registry-password ${{ secrets.AZURE_ACR_PASSWORD }}
